@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BC Finance Speedrun — Training Planner</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f6f8fa;
+    --panel-2: #eaecef;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --muted: #656d76;
+    --accent: #1a7f5a;
+    --accent-dim: #b5e8d5;
+    --star: #d97706;
+    --done: #1a7f5a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0f14;
+      --panel: #131820;
+      --panel-2: #1a212c;
+      --border: #232c3a;
+      --text: #e6edf3;
+      --muted: #8b96a8;
+      --accent: #6ee7b7;
+      --accent-dim: #2f6f5a;
+      --star: #fbbf24;
+      --done: #3b8268;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    padding: 24px 16px 80px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .sub { color: var(--muted); font-size: 0.92rem; }
+  .progress-wrap {
+    margin-top: 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--panel-2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .day {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .day-header {
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .day-header:hover { background: var(--panel-2); }
+  .day-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .day-num {
+    background: var(--panel-2);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+  }
+  .star { color: var(--star); font-size: 0.9rem; }
+  .day-meta {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .day-body {
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+    display: none;
+  }
+  .day.open .day-body { display: block; }
+  .day.complete .day-title { color: var(--done); }
+  .why {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 14px 0 18px;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent-dim);
+  }
+  h3 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 18px 0 8px;
+  }
+  ul.checks {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  ul.checks li {
+    padding: 6px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  ul.checks input[type="checkbox"] {
+    margin-top: 4px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  ul.checks label {
+    cursor: pointer;
+    font-size: 0.94rem;
+    flex: 1;
+  }
+  ul.checks input:checked + label {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    word-break: break-word;
+  }
+  a:hover { text-decoration: underline; }
+  .say {
+    background: var(--panel-2);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    margin-top: 14px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  .say strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cheat, .bookmarks {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  .cheat h2, .bookmarks h2 {
+    margin-top: 0;
+    font-size: 1.05rem;
+  }
+  .cheat ul, .bookmarks ul {
+    padding-left: 18px;
+    font-size: 0.9rem;
+  }
+  .cheat li, .bookmarks li { margin-bottom: 6px; }
+  .reset {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    margin-top: 10px;
+  }
+  .reset:hover { color: var(--text); border-color: var(--muted); }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 30px;
+    font-style: italic;
+  }
+  .status {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+  .status.saved { color: var(--accent); }
+  .check-count {
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--panel-2);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Business Central Finance — Speedrun Planner</h1>
+    <div class="sub">5-day sprint · ~2 hrs/day · For digital transformation <span id="status" class="status"></span></div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Overall progress</span>
+        <span id="pct">0%</span>
+      </div>
+      <div class="progress-bar"><div id="fill" class="progress-fill"></div></div>
+    </div>
+    <button class="reset" onclick="resetAll()">Reset all progress</button>
+  </header>
+
+  <div id="days"></div>
+
+  <div class="cheat">
+    <h2>Conversation Cheat Sheet</h2>
+    <ul>
+      <li>"What posting groups are configured for that customer/item/account?"</li>
+      <li>"Which dimensions are mandatory, and is there a default dimension priority conflict?"</li>
+      <li>"Is that going through General Posting Setup or a direct G/L posting?"</li>
+      <li>"How is bank rec handled — Payment Reconciliation Journal or Bank Account Reconciliation?"</li>
+      <li>"What's the WIP recognition method on the Projects module?"</li>
+      <li>"Are we using standard Financial Reports or custom Account Schedules?"</li>
+      <li>"How is the BAS being generated — standard VAT Statement or custom?"</li>
+      <li>"Is the BC-to-Dataverse sync bidirectional for Customers, and what's the master?"</li>
+      <li>"Are there custom posting routines or extensions touching the GL?"</li>
+    </ul>
+  </div>
+
+  <div class="bookmarks">
+    <h2>Bookmarks</h2>
+    <ul>
+      <li><a href="https://learn.microsoft.com/en-us/dynamics365/business-central/finance" target="_blank">BC Finance docs hub</a></li>
+      <li><a href="https://learn.microsoft.com/en-us/training/dynamics365/business-central" target="_blank">BC training hub</a></li>
+      <li><a href="https://learn.microsoft.com/en-us/training/paths/set-up-financial-management-dynamics-365-business-central/" target="_blank">Set up financial management path</a></li>
+      <li><a href="https://learn.microsoft.com/en-us/training/paths/create-financial-reports-dynamics-365-business-central/" target="_blank">Create financial reports path</a></li>
+      <li><a href="https://community.dynamics.com/" target="_blank">BC community forum</a></li>
+    </ul>
+  </div>
+
+  <footer>festina lente · steady daily reps beat one heroic weekend</footer>
+</div>
+
+<script>
+const STORAGE_KEY = 'bc-finance-planner-v1';
+
+const days = [
+  {
+    n: 1,
+    title: "Foundations & Mental Model",
+    why: "BC is a posting engine. Posting groups, dimensions, and chart of accounts unlock 70% of finance conversations.",
+    sections: [
+      { h: "Concepts to nail", items: [
+        "Chart of Accounts structure and account categories (BS / P&L / Cash Flow)",
+        "Posting Groups: General Posting Setup (Gen Bus + Gen Prod), VAT/GST Posting Setup, Specific (Customer, Vendor, Bank, Inventory, FA)",
+        "Dimensions: Global (max 2) vs Shortcut (up to 8), default dimensions, priorities",
+        "Transaction flow: Document → Posted Document → Sub-ledger Entry → G/L Entry"
+      ]},
+      { h: "Resources", items: [
+        'Microsoft Learn path: <a href="https://learn.microsoft.com/en-us/training/paths/set-up-financial-management-dynamics-365-business-central/" target="_blank">Set up financial management in BC</a>',
+        'Bookmark: <a href="https://learn.microsoft.com/en-us/dynamics365/business-central/finance" target="_blank">BC Finance docs hub</a>',
+        'Bookmark: <a href="https://learn.microsoft.com/en-us/training/dynamics365/business-central" target="_blank">BC training hub index</a>'
+      ]},
+      { h: "Hands-on", items: [
+        "In a sandbox, open the Chart of Accounts and trace a revenue G/L back through posting groups",
+        "Open a posted sales invoice, drill from document → customer ledger entry → G/L entries"
+      ]}
+    ],
+    say: "What posting groups are configured for that customer/item/account, and which dimensions are mandatory on the posting?"
+  },
+  {
+    n: 2,
+    title: "Sub-Ledgers (AR, AP, Bank, Cash)",
+    why: "Where the finance team lives day to day. You need to speak this fluently.",
+    sections: [
+      { h: "Concepts to nail", items: [
+        "AR flow: Customer → Sales Invoice → Posted → Customer Ledger Entry → G/L",
+        "Payment terms, payment methods, customer posting groups, reminders/dunning",
+        "Application of payments (one-to-one, one-to-many), Aged Receivables",
+        "AP flow: Vendor → Purchase Invoice → Posted → Vendor Ledger Entry → G/L",
+        "Three-way match (PO, receipt, invoice), Suggest Vendor Payments",
+        "Bank Account Reconciliation vs Payment Reconciliation Journal",
+        "AU bank file export (ABA format) for CBA / NAB / Westpac / ANZ",
+        "Recurring Sales Lines (corporate EAP contracts)"
+      ]},
+      { h: "Resources", items: [
+        "Microsoft Learn module: Set up banking in Business Central",
+        "Microsoft Learn module: Process customer payments and bank deposits",
+        'Browse: <a href="https://learn.microsoft.com/en-us/training/browse/?products=dynamics-business-central" target="_blank">BC training catalogue</a>'
+      ]},
+      { h: "Hands-on", items: [
+        "Post a sales invoice, then apply a customer payment to it",
+        "Run Suggest Vendor Payments and inspect the proposal",
+        "Open the Payment Reconciliation Journal and review auto-matching"
+      ]}
+    ],
+    say: "How is the bank reconciliation being handled — Payment Reconciliation Journal or Bank Account Reconciliation? And what's the ABA export setup?"
+  },
+  {
+    n: 3,
+    title: "GST, Period-End & Reporting",
+    why: "Compliance, close, and the reports the CFO actually looks at.",
+    sections: [
+      { h: "Concepts to nail", items: [
+        "GST in BC = the VAT engine. VAT Bus PG × VAT Prod PG → VAT Posting Setup",
+        "BAS report (AU localisation), VAT Statement, VAT Return",
+        "Period close (soft, blocks posting) vs Fiscal Year close (Close Income Statement → retained earnings)",
+        "Adjust Exchange Rates, accruals, prepayments, depreciation runs",
+        "Financial Reports (formerly Account Schedules): row defs + column defs + analysis views",
+        "Power BI integration, Edit in Excel, awareness of Jet Reports / Solver"
+      ]},
+      { h: "Resources", items: [
+        'Microsoft Learn path: <a href="https://learn.microsoft.com/en-us/training/paths/create-financial-reports-dynamics-365-business-central/" target="_blank">Create financial reports in BC</a>',
+        "BC Australia localisation docs (search 'Business Central Australia GST BAS')",
+        "ArcherPoint and Stoneridge Software blogs"
+      ]},
+      { h: "Hands-on", items: [
+        "Open a Financial Report, inspect a row and column definition, run for a period",
+        "Open the VAT Statement and trace one line back to a VAT entry"
+      ]}
+    ],
+    say: "Are we using standard Financial Reports or custom Account Schedules? And how is the BAS being generated?"
+  },
+  {
+    n: 4,
+    title: "Dimensions, Budgets & Projects",
+    star: true,
+    why: "HIGH LEVERAGE FOR ACCESSEAP. Services and NFP-adjacent orgs live or die on contract profitability and funding-source tracking.",
+    sections: [
+      { h: "Concepts to nail", items: [
+        "Default dimensions on customers, vendors, items, G/L accounts, resources",
+        "Dimension combinations and posting rules (e.g. every revenue posting must have a Funding Source)",
+        "Analysis Views for slicing the GL by dimension combinations",
+        "G/L Budgets: dimension-aware, multiple versions, Excel import, actual vs budget",
+        "Projects (formerly Jobs): Card, Tasks, Planning Lines (budget/billable/both), Journals, WIP, G/L Posting",
+        "WIP recognition methods and what each one means"
+      ]},
+      { h: "Resources", items: [
+        "Microsoft Learn: Use projects in Business Central (search the BC training hub)",
+        "YouTube: 'Business Central Jobs module tutorial' — pick a 20-min walkthrough",
+        'BC docs: <a href="https://learn.microsoft.com/en-us/dynamics365/business-central/" target="_blank">Projects section</a>'
+      ]},
+      { h: "Hands-on", items: [
+        "Sketch a draft dimension model for AccessEAP: Funding Source, Contract, Program, Region, Clinician (which are Global vs Shortcut?)",
+        "In a sandbox, create a Project, add tasks and planning lines, post a project journal, view profitability"
+      ]}
+    ],
+    say: "What's the WIP recognition method on the Projects module, and which dimensions are mandatory at posting?"
+  },
+  {
+    n: 5,
+    title: "NFP, D365 CE Integration & Cheat Sheet",
+    why: "Where BC meets your CE work. Most implementation pain lives here.",
+    sections: [
+      { h: "Concepts to nail", items: [
+        "BC ↔ Dataverse integration: standard sync of Customers/Accounts, Items/Products, Sales Orders, Invoices",
+        "Coupling/decoupling, sync direction, conflict resolution, master record decisions",
+        "BC is NOT a fund accounting system natively — solved with dimensions + discipline, or ISVs (Sylogist/Serenic, Binary Stream)",
+        "BC has NO native AU payroll — integrate with KeyPay (Employment Hero), Xero Payroll, or MYOB",
+        "Typical client portal flow: Portal → CE service request → fulfilment → BC invoice → posted invoice flows back to CE"
+      ]},
+      { h: "Resources", items: [
+        "BC docs: search 'Business Central and Dataverse integration'",
+        "Stoneridge Software and ArcherPoint blogs on BC-CE integration patterns"
+      ]},
+      { h: "Hands-on", items: [
+        "Map AccessEAP integration touchpoints: what flows CE → BC, what flows back, what's the master?",
+        "List the sync jobs and their cadence"
+      ]}
+    ],
+    say: "Is the BC-to-Dataverse sync bidirectional for Customers, and what's the master? Any custom posting routines or extensions touching the GL?"
+  }
+];
+
+let state = {};
+
+async function loadState() {
+  try {
+    const r = await window.storage.get(STORAGE_KEY);
+    if (r && r.value) state = JSON.parse(r.value);
+  } catch (e) {
+    state = {};
+  }
+}
+
+async function saveState() {
+  setStatus('saving…');
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+    setStatus('saved ✓', true);
+    setTimeout(() => setStatus(''), 1500);
+  } catch (e) {
+    setStatus('save failed');
+  }
+}
+
+function setStatus(msg, ok) {
+  const s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = 'status' + (ok ? ' saved' : '');
+}
+
+function render() {
+  const root = document.getElementById('days');
+  root.innerHTML = '';
+  days.forEach(day => {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day';
+    const totals = countDay(day);
+    if (totals.done === totals.total && totals.total > 0) dayEl.classList.add('complete');
+
+    let sectionsHtml = '';
+    day.sections.forEach((sec, si) => {
+      sectionsHtml += `<h3>${sec.h}</h3><ul class="checks">`;
+      sec.items.forEach((item, ii) => {
+        const id = `d${day.n}-s${si}-i${ii}`;
+        const checked = state[id] ? 'checked' : '';
+        sectionsHtml += `<li><input type="checkbox" id="${id}" ${checked} onchange="toggle('${id}')"><label for="${id}">${item}</label></li>`;
+      });
+      sectionsHtml += '</ul>';
+    });
+
+    dayEl.innerHTML = `
+      <div class="day-header" onclick="toggleDay(this)">
+        <div class="day-title">
+          <span class="day-num">DAY ${day.n}</span>
+          ${day.title}
+          ${day.star ? '<span class="star">★</span>' : ''}
+        </div>
+        <span class="check-count">${totals.done}/${totals.total}</span>
+      </div>
+      <div class="day-body">
+        <div class="why">${day.why}</div>
+        ${sectionsHtml}
+        <div class="say"><strong>You should now be able to say</strong>"${day.say}"</div>
+      </div>
+    `;
+    root.appendChild(dayEl);
+  });
+  updateProgress();
+}
+
+function countDay(day) {
+  let total = 0, done = 0;
+  day.sections.forEach((sec, si) => {
+    sec.items.forEach((item, ii) => {
+      total++;
+      const id = `d${day.n}-s${si}-i${ii}`;
+      if (state[id]) done++;
+    });
+  });
+  return { total, done };
+}
+
+function toggleDay(headerEl) {
+  headerEl.parentElement.classList.toggle('open');
+}
+
+async function toggle(id) {
+  state[id] = !state[id];
+  await saveState();
+  render();
+  // re-open any day that was open before render
+}
+
+function updateProgress() {
+  let total = 0, done = 0;
+  days.forEach(d => {
+    const t = countDay(d);
+    total += t.total;
+    done += t.done;
+  });
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('pct').textContent = pct + '% (' + done + '/' + total + ')';
+  document.getElementById('fill').style.width = pct + '%';
+}
+
+async function resetAll() {
+  if (!confirm('Reset all progress?')) return;
+  state = {};
+  await saveState();
+  render();
+}
+
+(async () => {
+  await loadState();
+  render();
+  // open day 1 by default if nothing is checked
+  if (Object.keys(state).length === 0) {
+    document.querySelector('.day').classList.add('open');
+  }
+})();
+</script>
+</body>
+</html>
